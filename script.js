@@ -1,6 +1,8 @@
 let userName = "no name";
 let scoreData = {};
 
+const scoresURL = "https://score-tracker-4ygg.onrender.com/scores";
+
 document.addEventListener("DOMContentLoaded", function() {
     loadUser();
     loadScores();
@@ -22,7 +24,7 @@ function login() {
 }
 
 function saveScores(scores) {
-    fetch("http://127.0.0.1:5000/scores", {
+    fetch(scoresURL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(scores)
@@ -36,7 +38,7 @@ function saveScores(scores) {
 }
 
 function loadScores() {
-    fetch("http://127.0.0.1:5000/scores")
+    fetch(scoresURL)
         .then(response => response.json())
         .then(data => {
             console.log("Loaded scores:", data);
