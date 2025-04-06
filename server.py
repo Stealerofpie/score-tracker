@@ -6,7 +6,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Allows frontend to connect
 
-FILE_PATH = "scores.json"
+# Use relative path for scores.json
+FILE_PATH = os.path.join(os.getcwd(), "scores.json")
 
 # 🟢 Get scores (GET request)
 @app.route("/scores", methods=["GET"])
