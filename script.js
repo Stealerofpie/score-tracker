@@ -1,3 +1,11 @@
+/* -- to do --
+- reset scores each day
+- separately record overall score
+- display overall leaderboard
+- add message board / comments
+- add other games
+*/
+
 let userName = "no name";
 let scoreData = {};
 
@@ -46,6 +54,7 @@ function loadScores() {
             scoreData = data;
 
             updateLeaderboard();
+            checkForUserScore();
         })
         .catch(error => console.error("Error loading scores:", error));
 }
@@ -59,8 +68,17 @@ function addScore() {
 
         saveScores(scoreData);
     } else {
-        alert("Invalid data entered");
+        alert("Invalid score entered - please use the \"Share\" button on Wordle to copy the results.");
     }
+}
+
+function clearUserScore() {
+    if (userName in scoreData) {
+        delete scoreData[userName];
+    } else {
+        console.log("It's not there");
+    }
+    saveScores(scoreData);
 }
 
 function parseScore(score) {
@@ -84,6 +102,7 @@ function savePlayer() {
     localStorage.setItem("currentUser", selectedName);
     document.getElementById("nameModal").style.display = "none";
     loadUser();
+    checkForUserScore();
 }
 
 function updateLeaderboard() {
@@ -105,4 +124,15 @@ function updateLeaderboard() {
     const lb = document.getElementById("leaderboard");
     lb.style.height = "auto"; // Reset height
     lb.style.height = (lb.scrollHeight) + "px"; // Set to scrollHeight
+}
+
+function checkForUserScore() {
+    if (userName in scoreData) {
+        document.getElementById("pasteScore").hidden = true;
+        document.getElementById("clearScore").hidden = false;
+        document.getElementById("currentUserScore").textContent = scoreData[userName];
+    } else {
+        document.getElementById("pasteScore").hidden = false;
+        document.getElementById("clearScore").hidden = true;
+    }
 }

@@ -12,12 +12,12 @@
     <h1>Score Tracker</h1>
     
     <p>You are logged in as: <label id="labelHello">Guest</label></p>
-    
-    <div id="pasteScore">
-    <label for="scoreInput">Paste Your Score:</label>
-    <textarea id="scoreInput" placeholder="Paste your result here..."></textarea>
-    
-    <button onclick="addScore()">Submit</button>
+
+    <div id="pasteScore" hidden>
+        <label for="scoreInput">Paste Your Score:</label>
+        <textarea id="scoreInput" placeholder="Paste your result here..."></textarea>
+        
+        <button onclick="addScore()">Submit</button>
 
     </div>
     
@@ -28,14 +28,24 @@
         <div class="modal-content">
             <h2>Select Your Name</h2>
             <select id="nameSelect">
-                <option value="Alice">Alice</option>
-                <option value="Bob">Bob</option>
-                <option value="Charlie">Charlie</option>
+                <option value="Steve">Steve</option>
+                <option value="Sam">Sam</option>
+                <option value="Cliff">Cliff</option>
+                <option value="Shefali">Shefali</option>
+                <option value="Ellie">Ellie</option>
+                <option value="Beau">Beau</option>
+                <option value="Jasper">Jasper</option>
+                <option value="Luke">Luke</option>
             </select>
             <button onclick="savePlayer()">Confirm</button>
         </div>
     </div>    
     
+    <div id="clearScore" hidden>
+        <p>Your score for today was: <label id="currentUserScore"></label></p>
+        <button onclick="clearUserScore()">Click here to clear your score</button>
+    </div>
+
     <script src="script.js"></script>
 
 </body>
