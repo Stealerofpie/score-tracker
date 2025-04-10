@@ -11,7 +11,6 @@ TEMPLATE_PATH = "scores_template.json"
 if not os.path.exists(FILE_PATH):
     shutil.copy(TEMPLATE_PATH, FILE_PATH)
 
-
 app = Flask(__name__)
 CORS(app)  # Allows frontend to connect
 
