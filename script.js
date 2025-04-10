@@ -4,6 +4,7 @@
 - display overall leaderboard
 - add message board / comments
 - add other games
+- 
 */
 
 let userName = "no name";
