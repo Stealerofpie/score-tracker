@@ -35,3 +35,9 @@ if __name__ == "__main__":
 @app.route("/")
 def home():
     return "Score Tracker backend is running."
+
+@app.route("/clear-scores", methods=["POST"])
+def clear_scores():
+    with open("scores.json", "w") as f:
+        json.dump({}, f)
+    return jsonify({"message": "Scores cleared!"})
