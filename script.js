@@ -10,7 +10,7 @@
 let userName = "no name";
 let scoreData = {};
 
-const scoresURL = "https://score-tracker-4ygg.onrender.com/scores";
+//const scoresURL = "https://score-tracker-4ygg.onrender.com/scores";
 
 document.addEventListener("DOMContentLoaded", function() {
     loadUser();
@@ -33,32 +33,33 @@ function login() {
 }
 
 function saveScores(scores) {
-    fetch(scoresURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(scores)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data.message);
+    const batch = db.batch();
+    for (const name in scores) {
+        const docRef = scoresRef.doc(name);
+        batch.set(docRef, { score: scores[name] });
+    }
+
+    batch.commit().then(() => {
+        console.log("Scores saved successfully");
         loadScores();
-    })
-    .catch(error => console.error("Error saving scores:", error));
+    }).catch(error => console.error("Error saving scores:", error));
 }
 
 function loadScores() {
-    fetch(scoresURL)
-        .then(response => response.json())
-        .then(data => {
-            console.log("Loaded scores:", data);
+    scoresRef.get()
+        .then(snapshot => {
+            const scores = {};
+            snapshot.forEach(doc => {
+                scores[doc.id] = doc.data().score;
+            });
 
-            scoreData = data;
-
+            scoreData = scores;
             updateLeaderboard();
             checkForUserScore();
         })
         .catch(error => console.error("Error loading scores:", error));
 }
+
 
 
 function addScore() {
@@ -74,12 +75,13 @@ function addScore() {
 }
 
 function clearUserScore() {
-    if (userName in scoreData) {
-        delete scoreData[userName];
-    } else {
-        console.log("It's not there");
-    }
-    saveScores(scoreData);
+    scoresRef.doc(userName).delete()
+        .then(() => {
+            console.log("Score deleted");
+            delete scoreData[userName];
+            loadScores();
+        })
+        .catch(error => console.error("Error deleting score:", error));
 }
 
 function parseScore(score) {
