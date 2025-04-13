@@ -7,14 +7,28 @@
 - 
 */
 
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-const scoresRef = collection(db, "scores");
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDGRO1WFA4TTHU7BdQOtPg6ECTKt3et6k8",
+    authDomain: "score-tracker-be52b.firebaseapp.com",
+    projectId: "score-tracker-be52b",
+    storageBucket: "score-tracker-be52b.firebasestorage.app",
+    messagingSenderId: "175857463815",
+    appId: "1:175857463815:web:8b290df6cbf26bd76c70a2"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Initialize Firestore
+const db = getFirestore(app);
+const scoresRef = collection(db, "scores"); // Reference to the "scores" collection
 
 let userName = "no name";
 let scoreData = {};
-
-//const scoresURL = "https://score-tracker-4ygg.onrender.com/scores";
 
 document.addEventListener("DOMContentLoaded", function() {
     loadUser();
@@ -37,24 +51,23 @@ function login() {
 }
 
 function saveScores(scores) {
-    const batch = db.batch();
     for (const name in scores) {
-        const docRef = scoresRef.doc(name);
-        batch.set(docRef, { score: scores[name] });
+        const docRef = doc(db, "scores", name);  // Reference to the player's document in the "scores" collection
+        setDoc(docRef, { score: scores[name] })  // Set the score for that player
+            .then(() => {
+                console.log("Scores saved successfully");
+                loadScores();
+            })
+            .catch(error => console.error("Error saving scores:", error));
     }
-
-    batch.commit().then(() => {
-        console.log("Scores saved successfully");
-        loadScores();
-    }).catch(error => console.error("Error saving scores:", error));
 }
 
 function loadScores() {
-    scoresRef.get()
+    getDocs(scoresRef)
         .then(snapshot => {
             const scores = {};
             snapshot.forEach(doc => {
-                scores[doc.id] = doc.data().score;
+                scores[doc.id] = doc.data().score;  // Get the score from the document
             });
 
             scoreData = scores;
@@ -63,8 +76,6 @@ function loadScores() {
         })
         .catch(error => console.error("Error loading scores:", error));
 }
-
-
 
 function addScore() {
     const score = parseScore(document.getElementById("scoreInput").value);
@@ -79,7 +90,8 @@ function addScore() {
 }
 
 function clearUserScore() {
-    scoresRef.doc(userName).delete()
+    const docRef = doc(db, "scores", userName);  // Reference to the document
+    deleteDoc(docRef)  // Delete the user's score document
         .then(() => {
             console.log("Score deleted");
             delete scoreData[userName];
