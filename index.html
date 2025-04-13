@@ -5,28 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Score Tracker</title>
     <link rel="stylesheet" href="styles.css">
-
-    <!-- Firebase App (the core Firebase SDK) -->
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
-
-    <!-- Firebase Firestore -->
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
-
-    <script>
-      // Your web app's Firebase configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyDGRO1WFA4TTHU7BdQOtPg6ECTKt3et6k8",
-        authDomain: "score-tracker-be52b.firebaseapp.com",
-        projectId: "score-tracker-be52b",
-        storageBucket: "score-tracker-be52b.firebasestorage.app",
-        messagingSenderId: "175857463815",
-        appId: "1:175857463815:web:8b290df6cbf26bd76c70a2"
-      };
-
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-    </script>
 </head>
 <body>
     <button onclick="login()" id="loginBtn">Login</button>
@@ -67,6 +45,26 @@
     </div>
 
     <!-- Your JS file, which now has access to Firebase -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyDGRO1WFA4TTHU7BdQOtPg6ECTKt3et6k8",
+          authDomain: "score-tracker-be52b.firebaseapp.com",
+          projectId: "score-tracker-be52b",
+          storageBucket: "score-tracker-be52b.firebasestorage.app",
+          messagingSenderId: "175857463815",
+          appId: "1:175857463815:web:8b290df6cbf26bd76c70a2"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+    </script>
+    
     <script src="script.js"></script>
 
 </body>
