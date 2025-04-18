@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <button onclick="login()" id="loginBtn">Login</button>
+    <button id="loginBtn">Login</button>
 
     <h1>Score Tracker</h1>
     
@@ -16,54 +16,24 @@
     <div id="pasteScore" hidden>
         <label for="scoreInput">Paste Your Score:</label>
         <textarea id="scoreInput" placeholder="Paste your result here..."></textarea>
-        <button onclick="addScore()">Submit</button>
+        <button id="addScoreBtn">Submit</button>
     </div>
     
-    <h2>Leaderboard</h2>
+    <h2>Today's Leaderboard</h2>
     <textarea id="leaderboard" placeholder="Today's leaderboard" readonly></textarea>
 
     <div id="nameModal" class="modal">
         <div class="modal-content">
             <h2>Select Your Name</h2>
-            <select id="nameSelect">
-                <option value="Steve">Steve</option>
-                <option value="Sam">Sam</option>
-                <option value="Cliff">Cliff</option>
-                <option value="Shefali">Shefali</option>
-                <option value="Ellie">Ellie</option>
-                <option value="Beau">Beau</option>
-                <option value="Jasper">Jasper</option>
-                <option value="Luke">Luke</option>
-            </select>
-            <button onclick="savePlayer()">Confirm</button>
+            <select id="nameSelect"></select>
+            <button id="savePlayerBtn">Confirm</button>
         </div>
     </div>    
     
-    <div id="clearScore" hidden>
+    <div id="clearScore">
         <p>Your score for today was: <label id="currentUserScore"></label></p>
-        <button onclick="clearUserScore()">Click here to clear your score</button>
+        <button id="clearScoreBtn">Click here to clear your score</button>
     </div>
-
-    <!-- Your JS file, which now has access to Firebase -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-      
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-          apiKey: "AIzaSyDGRO1WFA4TTHU7BdQOtPg6ECTKt3et6k8",
-          authDomain: "score-tracker-be52b.firebaseapp.com",
-          projectId: "score-tracker-be52b",
-          storageBucket: "score-tracker-be52b.firebasestorage.app",
-          messagingSenderId: "175857463815",
-          appId: "1:175857463815:web:8b290df6cbf26bd76c70a2"
-        };
-      
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-    </script>
     
     <script type="module" src="script.js"></script>
 
