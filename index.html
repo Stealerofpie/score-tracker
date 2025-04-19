@@ -7,11 +7,18 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <button id="loginBtn">Login</button>
-
-    <h1>Score Tracker</h1>
+    <div id="gameMenu">
+        <button class="gameBtn" data-game="wordle">Wordle</button>
+        <button class="gameBtn" data-game="tradle">Tradle</button>
+        <button class="gameBtn" data-game="timeGuesser">TimeGuesser</button>
+    </div>    
     
-    <p>You are logged in as: <label id="labelHello">Guest</label></p>
+    <div id="loginDiv">
+        <label id="labelHello">Guest</label><br>
+        <button id="loginBtn">Login</button>
+    </div>
+
+    <h1>Score Tracker: <label id="labelCurrentGame">Game</label></h1>
 
     <div id="pasteScore" hidden>
         <label for="scoreInput">Paste Your Score:</label>
@@ -34,6 +41,9 @@
         <p>Your score for today was: <label id="currentUserScore"></label></p>
         <button id="clearScoreBtn">Click here to clear your score</button>
     </div>
+
+    <h2>All-time Leaderboard</h2>
+    <textarea id="leaderboardAllTime" placeholder="All-time leaderboard" readonly></textarea>
     
     <script type="module" src="script.js"></script>
 

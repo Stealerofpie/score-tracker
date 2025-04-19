@@ -29,13 +29,25 @@ ul {
     overflow: hidden;
 }
 
-#loginBtn {
+#leaderboardAllTime {
+    width:fit-content;
+    height:fit-content;
+    resize: none;
+    overflow: hidden;
+}
+
+#loginDiv {
+    background-color: #007bff;
+    border-radius: 5px;
     position: absolute;
     top: 10px;
     right: 10px;
     padding: 10px 15px;
     font-size: 16px;
-    background-color: #007bff;
+}
+
+#loginBtn {
+    background-color: #0056b3;
     color: white;
     border: none;
     border-radius: 5px;
@@ -43,7 +55,34 @@ ul {
 }
 
 #loginBtn:hover {
-    background-color: #0056b3;
+    background-color: #004792;
+}
+
+#gameMenu {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    top: 0;
+    z-index: 10;
+}
+
+.gameBtn {
+    background-color: #e0e0e0;
+    border: none;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.gameBtn:hover {
+    background-color: #d0d0d0;
+}
+
+.gameBtn.active {
+    background-color: #007bff;
+    color: white;
 }
 
 .modal {

@@ -1,7 +1,4 @@
 /* -- to do --
-- display leaderboard properly and sort
-- separately record overall score
-- display overall leaderboard
 - add other games
 - add message board / comments
 */
@@ -27,7 +24,6 @@ const db = getFirestore(app);
 // Global variables
 var userName = "";
 var userScore;
-var scoreData = [];
 var currentGame = "wordle";
 
 // User list
@@ -48,11 +44,18 @@ var userList = [
     "Linh",
     "Lily",
     "Trudy"
-]
+];
 
 // Runs when DOM has loaded
 document.addEventListener("DOMContentLoaded", function() {
+    initSite();
+});
+
+// Initialise website
+function initSite() {
     populateUserSelect();
+
+    document.getElementById("labelCurrentGame").textContent = currentGame.charAt(0).toUpperCase() + currentGame.slice(1);
 
     // Add event listeners for buttons
     document.getElementById("loginBtn").addEventListener("click", login);
@@ -60,11 +63,16 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("savePlayerBtn").addEventListener("click", savePlayer);
     document.getElementById("clearScoreBtn").addEventListener("click", clearUserScore);
 
-    // Load user info and scores based on who is logged in
+    updateAllFields();
+}
+
+// Load user info and scores based on who is logged in and update leaderboards
+function updateAllFields() {
     loadUser();
     updateUserScore();
     updateLeaderboard();
-});
+    updateLeaderboardAllTime();
+}
 
 // Populate the user drop-down based on the userList
 function populateUserSelect() {
@@ -109,7 +117,7 @@ async function saveScore(username, gamename, date, score) {
     }
 }
 
-// Load scores from Firestore by username and game
+// Load all scores and dates from Firestore for a user for a particular game
 async function getScoresByGame(username, gamename) {
     try {
         const scoresCollectionRef = collection(db, "users", username, "games", gamename, "date");
@@ -123,10 +131,15 @@ async function getScoresByGame(username, gamename) {
         // Optional: Sort by date
         //scores.sort((a, b) => a.date.localeCompare(b.date));
 
-        console.log("Retrieved scores:", scores);
-        return scores;
+        if (scores.length > 0) {
+            console.log("Retrieved scores:", scores);
+            return scores;
+        } else {
+            return null;
+        }
     } catch (error) {
         console.error("Error getting scores:", error);
+        return null;
     }
 }
 
@@ -164,6 +177,7 @@ async function addScore() {
 
     await updateUserScore();
     await updateLeaderboard();
+    await updateLeaderboardAllTime();
 }
 
 // Delete user's score from today
@@ -178,6 +192,7 @@ async function clearUserScore() {
     }
     await updateUserScore()
     await updateLeaderboard();
+    await updateLeaderboardAllTime();
 }
 
 // Parse the data entered by the user and return the score if found, otherwise return null
@@ -207,11 +222,12 @@ function savePlayer() {
     updateUserScore();
 }
 
-// Update the leaderboard 
+// Update the daily leaderboard 
 async function updateLeaderboard() {
     const leaderboardTextArea = document.getElementById("leaderboard");
     const todaysScores = {};
 
+    // Get today's score for each user and add to object
     for (const user of userList) {
         const uscore = await getScoresByDate(user, currentGame, getTodaysDate());
         if (uscore) {
@@ -219,49 +235,59 @@ async function updateLeaderboard() {
         }
     }
 
-    // Update leaderboard text and eset height and scroll height
-    leaderboardTextArea.value = JSON.stringify(todaysScores, null, 2);
+    // Convert the object to an array sorted by score
+    const sortedEntries = Object.entries(todaysScores).sort(
+        (a, b) => Number(a[1]) - Number(b[1])
+    );
+    
+    // Loop through results and add to a string for display purposes
+    let displayText = "";
+    for (const [name, score] of sortedEntries) {
+        displayText += `${name}: ${score}\n`;
+    }
+    
+    // Update leaderboard text and reset height and scroll height
+    leaderboardTextArea.value = displayText.trim();
     leaderboardTextArea.style.height = "auto";
     leaderboardTextArea.style.height = (leaderboardTextArea.scrollHeight) + "px";
 }
-/*
-function updateLeaderboard() {
-    const leaderboardTextArea = document.getElementById("leaderboard");
 
-    let todaysScores = {}
+// Update the all-time leaderboard 
+async function updateLeaderboardAllTime() {
+    const lbAllTime = document.getElementById("leaderboardAllTime");
+    const allUserScores = {};
 
-    // Loop through users and add name and score to today's score list if there is a score
-    for (let u in userList) {
-        console.log(userList[u]);
-        getScoresByDate(userList[u], currentGame, getTodaysDate())
-        .then((uscore) => {
-            console.log(uscore);
-            if (uscore) {
-                todaysScores[userList[u]] = uscore;
+    // Get all scores for each user
+    for (const user of userList) {
+        const uScoreList = [];
+        const allScores = await getScoresByGame(user, currentGame);
+        // Check non-null value returned
+        if (allScores) {
+            // Loop through the user's scores and add them to our temporary list
+            for (const i in allScores) {
+                uScoreList.push(allScores[i]["score"]);
             }
-        });
+            // Add up the some and divide by number of entries to get average
+            let sumOfScores = uScoreList.reduce((a, b) => Number(a) + Number(b), 0);
+            allUserScores[user] = sumOfScores / allScores.length;
+        }
     }
-
-    // Update leaderboard
-    leaderboardTextArea.value = JSON.stringify(todaysScores, null, 2);
     
-    // Reset height and scroll height
-    leaderboardTextArea.style.height = "auto";
-    leaderboardTextArea.style.height = (leaderboardTextArea.scrollHeight) + "px";
-
-    /*const scoresArray = Object.entries(scoreData);
-
-    scoresArray.sort((a, b) => b[1] - a[1]);
-
-    const sortedScores = Object.fromEntries(scoresArray);
-
-    let text = "";
-    for (const name in sortedScores) {
-        text += `${name}: ${scoreData[name]}\n`;
+    // Convert the object to an array sorted by score
+    const sortedEntries = Object.entries(allUserScores).sort(
+        (a, b) => Number(a[1]) - Number(b[1])
+    );
+    
+    // Loop through results and add to a string for display purposes
+    let displayText = "";
+    for (const [name, score] of sortedEntries) {
+        displayText += `${name}: ${score}\n`;
     }
-
-    leaderboardTextArea.value = text.trim(); // Update textarea with scores*/
-//}
+    // Update leaderboard text and reset height and scroll height
+    lbAllTime.value = displayText.trim();
+    lbAllTime.style.height = "auto";
+    lbAllTime.style.height = (lbAllTime.scrollHeight) + "px";
+}
 
 // Get current user's score for today and store for use
 async function updateUserScore() {
@@ -277,17 +303,19 @@ async function updateUserScore() {
 // Checks for saved score for this user and shows it if it's there or seeks a new score
 function checkForUserScore() {
     if (userScore) {
-        console.log("score - show it");
         document.getElementById("pasteScore").hidden = true;
         document.getElementById("clearScore").hidden = false;
         document.getElementById("currentUserScore").textContent = userScore;
     } else {
-        console.log("no score - seek input");
         document.getElementById("pasteScore").hidden = false;
         document.getElementById("clearScore").hidden = true;
     }
 }
 
 function getTodaysDate() {
-    return new Date().toISOString().split("T")[0];
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
