@@ -8,9 +8,9 @@
 </head>
 <body>
     <div id="gameMenu">
+        <button class="gameBtn" data-game="timeGuesser">TimeGuesser</button>
         <button class="gameBtn" data-game="wordle">Wordle</button>
         <button class="gameBtn" data-game="tradle">Tradle</button>
-        <button class="gameBtn" data-game="timeGuesser">TimeGuesser</button>
     </div>    
     
     <div id="loginDiv">
@@ -18,7 +18,7 @@
         <button id="loginBtn">Login</button>
     </div>
 
-    <h1>Score Tracker: <label id="labelCurrentGame">Game</label></h1>
+    <h1>Score Tracker: <label id="labelCurrentGame">Loading...</label></h1>
 
     <div id="pasteScore" hidden>
         <label for="scoreInput">Paste Your Score:</label>
@@ -45,6 +45,15 @@
     <h2>All-time Leaderboard</h2>
     <textarea id="leaderboardAllTime" placeholder="All-time leaderboard" readonly></textarea>
     
+    <div id="messageBoard" hidden>
+        <h1>Messages - today</h1>
+        <div id="messageArea"></div>
+        <div id="typeMessage">
+            <textarea id="textareaMessage" placeholder="Type your message here..."></textarea>
+            <button id="sendBtn">Send</button>
+        </div>
+    </div>
+
     <script type="module" src="script.js"></script>
 
 </body>
