@@ -37,7 +37,7 @@ ul {
 }
 
 #loginDiv {
-    background-color: #007bff;
+    background-color: #e7e7e7dd;
     border-radius: 5px;
     position: absolute;
     top: 10px;
@@ -47,7 +47,7 @@ ul {
 }
 
 #loginBtn {
-    background-color: #0056b3;
+    background-color: #6e6d6d;
     color: white;
     border: none;
     border-radius: 5px;
@@ -55,7 +55,7 @@ ul {
 }
 
 #loginBtn:hover {
-    background-color: #004792;
+    background-color: #4b4b4b;
 }
 
 #gameMenu {

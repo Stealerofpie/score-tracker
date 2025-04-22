@@ -1,6 +1,14 @@
 /* -- to do --
-- add message board / comments
+- make sidebar that notes current score, option to clear score, and notes current game and user
+- average option vs total score for leaderboard where applicable
+- limit decimal places
+- add links to each game
+- add instructions / tool tips
+- auto-refresh feature
+- consider 'highlights' for stats e.g. top by average, top by total
+- add Hard Quiz
 - add other games
+- let users query by date range / weekly option
 */
 
 // Imports
@@ -163,10 +171,9 @@ function login() {
 // Save score to Firestore
 async function saveScore(username, gamename, date, score) {
     try {
-        const scoreRef = doc(db, "users", username, "games", gamename, "date", date);
-        await setDoc(scoreRef, {
-            score: score
-        });
+        await setDoc(doc(db, "games", gamename, "dates", date, "users", username), { score });
+        await setDoc(doc(db, "games", gamename, "users", username, "dates", date), { score });
+
         console.log("Score saved successfully!");
     } catch (error) {
         console.error("Error saving score:", error);
@@ -176,16 +183,13 @@ async function saveScore(username, gamename, date, score) {
 // Load all scores and dates from Firestore for a user for a particular game
 async function getScoresByGame(username, gamename) {
     try {
-        const scoresCollectionRef = collection(db, "users", username, "games", gamename, "date");
+        const scoresCollectionRef = collection(db, "games", gamename, "users", username, "dates");
         const querySnapshot = await getDocs(scoresCollectionRef);
         const scores = [];
 
         querySnapshot.forEach((doc) => {
             scores.push({date: doc.id, score: doc.data().score});
         });
-
-        // Optional: Sort by date
-        //scores.sort((a, b) => a.date.localeCompare(b.date));
 
         if (scores.length > 0) {
             return scores;
@@ -199,9 +203,9 @@ async function getScoresByGame(username, gamename) {
 }
 
 // Load a particular score from Firestore by username, game name and date
-async function getScoresByDate(username, gamename, date) {
+async function getUserScore(username, gamename, date) {
     try {
-        const scoreRef = doc(db, "users", username, "games", gamename, "date", date);
+        const scoreRef = doc(db, "games", gamename, "dates", date, "users", username);
         const docSnap = await getDoc(scoreRef);
 
         if (docSnap.exists()) {
@@ -210,6 +214,29 @@ async function getScoresByDate(username, gamename, date) {
 
             return scores;
         } else {
+            return null;
+        }
+    } catch (error) {
+        console.error("Error getting scores:", error);
+        return null;
+    }
+}
+
+// Load scores for all users from Firestore by game and date
+async function getScoresByDate(gamename, date) {
+    try {
+        const scoreRef = collection(db, "games", gamename, "dates", date, "users");
+        const docSnap = await getDocs(scoreRef);
+        const scores = {};
+
+        docSnap.forEach((doc) => {
+            scores[doc.id] = doc.data().score;
+        });
+
+        if (Object.keys(scores).length > 0) {
+            return scores;
+        } else {
+            console.log("No scores to load.");
             return null;
         }
     } catch (error) {
@@ -238,8 +265,8 @@ async function addScore() {
 // Delete user's score from today
 async function clearUserScore() {
     try {
-        const scorePath = doc(db, "users", userName, "games", currentGame, "date", getTodaysDate());
-        await deleteDoc(scorePath);
+        await deleteDoc(doc(db, "games", currentGame, "dates", getTodaysDate(), "users", userName));
+        await deleteDoc(doc(db, "games", currentGame, "users", userName, "dates", getTodaysDate()));
         console.log(`Deleted score for ${userName} on ${getTodaysDate()}`);
         userScore = null;
     } catch {
@@ -282,36 +309,33 @@ function savePlayer() {
 // Update the daily leaderboard 
 async function updateLeaderboard() {
     const leaderboardTextArea = document.getElementById("leaderboard");
-    const todaysScores = {};
 
     // Get today's score for each user and add to object
-    for (const user of userList) {
-        const uscore = await getScoresByDate(user, currentGame, getTodaysDate());
-        if (uscore) {
-            todaysScores[user] = uscore;
-        }
-    }
+    const todaysScores = await getScoresByDate(currentGame, getTodaysDate());
 
     // Convert the object to an array sorted by score
-    const sortedEntries = Object.entries(todaysScores).sort((a, b) => {
-        if (gameDetails[currentGame]["ascending"]) {
-            return Number(a[1]) - Number(b[1]);
-        } else {
-            return Number(b[1]) - Number(a[1]);
+    if (todaysScores) {
+        const sortedEntries = Object.entries(todaysScores).sort((a, b) => {
+            if (gameDetails[currentGame]["ascending"]) {
+                return Number(a[1]) - Number(b[1]);
+            } else {
+                return Number(b[1]) - Number(a[1]);
+            }        
+        });
+    
+        // Loop through results and add to a string for display purposes
+        let displayText = "";
+        for (const [name, score] of sortedEntries) {
+            displayText += `${name}: ${score}\n`;
         }
         
-    });
-    
-    // Loop through results and add to a string for display purposes
-    let displayText = "";
-    for (const [name, score] of sortedEntries) {
-        displayText += `${name}: ${score}\n`;
+        // Update leaderboard text and reset height and scroll height
+        leaderboardTextArea.value = displayText.trim();
+        leaderboardTextArea.style.height = "auto";
+        leaderboardTextArea.style.height = (leaderboardTextArea.scrollHeight) + "px";
+    } else {
+        console.log("Failed to update daily leaderboard.");
     }
-    
-    // Update leaderboard text and reset height and scroll height
-    leaderboardTextArea.value = displayText.trim();
-    leaderboardTextArea.style.height = "auto";
-    leaderboardTextArea.style.height = (leaderboardTextArea.scrollHeight) + "px";
 }
 
 // Update the all-time leaderboard 
@@ -364,7 +388,7 @@ async function updateLeaderboardAllTime() {
 
 // Get current user's score for today and store for use
 async function updateUserScore() {
-    const scoreUser = await getScoresByDate(userName, currentGame, getTodaysDate());
+    const scoreUser = await getUserScore(userName, currentGame, getTodaysDate());
 
     if (scoreUser) {
         userScore = scoreUser;
@@ -421,7 +445,7 @@ async function sendMessage() {
         // Generate message name based on username and time sent
         const messageTime = getCurrentTime();
         const messageName = `${userName}-${messageTime}`;
-        const messageRef = doc(db, "communications", "chat", "game", currentGame, "date", getTodaysDate(), "message", messageName);
+        const messageRef = doc(db, "games", currentGame, "dates", getTodaysDate(), "messages", messageName);
         await setDoc(messageRef, {
             user: userName,
             time: messageTime,
@@ -440,7 +464,7 @@ async function loadMessages() {
     document.getElementById("messageArea").textContent = "";
 
     try {
-        const messagesRef = collection(db, "communications", "chat", "game", currentGame, "date", getTodaysDate(), "message");
+        const messagesRef = collection(db, "games", currentGame, "dates", getTodaysDate(), "messages");
         const messagesQuery = query(messagesRef, orderBy("time"));
         const querySnapshot = await getDocs(messagesQuery);
 
