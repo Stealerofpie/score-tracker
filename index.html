@@ -14,15 +14,22 @@
     </div>    
     
     <div id="loginDiv">
-        <label id="labelHello">Guest</label><br>
-        <button id="loginBtn">Login</button>
+        <p><label id="labelHello">Guest</label><br>
+        <button class="sideBtn" id="loginBtn">Login</button></p>
+        
+        <p>Game:<br><label id="labelCurrentGame">Loading...</label></p>
+        
+        <div id="clearScore">
+            <p>Today's score:<br><label id="currentUserScore"></label><br>
+            <button class="sideBtn" id="clearScoreBtn">Clear</button></p>
+        </div>
     </div>
 
-    <h1>Score Tracker: <label id="labelCurrentGame">Loading...</label></h1>
+    <h1>Score Tracker</h1>
 
     <div id="pasteScore" hidden>
-        <label for="scoreInput">Paste Your Score:</label>
-        <textarea id="scoreInput" placeholder="Paste your result here..."></textarea>
+        <label for="scoreInput">Paste Your Score:<span class="tooltip-icon">?<span class="tooltip-text">Once you finish the game click the share button and paste it here.</span></span></label><br>
+        <br><textarea id="scoreInput" placeholder="Paste your result here..."></textarea><br>
         <button id="addScoreBtn">Submit</button>
     </div>
     
@@ -36,20 +43,23 @@
             <button id="savePlayerBtn">Confirm</button>
         </div>
     </div>    
-    
-    <div id="clearScore">
-        <p>Your score for today was: <label id="currentUserScore"></label></p>
-        <button id="clearScoreBtn">Click here to clear your score</button>
-    </div>
 
     <h2>All-time Leaderboard</h2>
+
+    <p>
+        <span class="orderByBtnClass">
+            <button id="orderByBtn">Ordered by average</button>
+            <span class="tooltip-text">Click to toggle between average / total score</span>
+        </span>
+    </p>
+      
     <textarea id="leaderboardAllTime" placeholder="All-time leaderboard" readonly></textarea>
     
     <div id="messageBoard" hidden>
         <h1>Messages - today</h1>
         <div id="messageArea"></div>
         <div id="typeMessage">
-            <textarea id="textareaMessage" placeholder="Type your message here..."></textarea>
+            <textarea id="textareaMessage" placeholder="Type your message here..."></textarea><br>
             <button id="sendBtn">Send</button>
         </div>
     </div>

@@ -1,19 +1,15 @@
 /* -- to do --
-- make sidebar that notes current score, option to clear score, and notes current game and user
-- average option vs total score for leaderboard where applicable
-- limit decimal places
-- add links to each game
-- add instructions / tool tips
-- auto-refresh feature
+- auto-refresh feature (incomplete)
 - consider 'highlights' for stats e.g. top by average, top by total
 - add Hard Quiz
 - add other games
 - let users query by date range / weekly option
+- create new GIT account
 */
 
 // Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -33,6 +29,9 @@ const db = getFirestore(app);
 var userName = "";
 var userScore;
 var currentGame = "";
+let allUserScoresByAvg = {};
+let allUserScoresByTotal = {};
+let orderedByAverage = true;
 
 // User list
 var userList = [
@@ -57,8 +56,18 @@ var userList = [
 
 // Declare regular expressions for each game
 const gameDetails = {
-    wordle: {regex: /Wordle\s(?:\d{1,3}(?:\d{3})*)\s(\d)\/\d+/g, ascending: true, averageRequired: true},
-    timeGuesser: {regex: /TimeGuessr\s+#\d+\s+(\d+)\/[\d,]+/g, ascending: false, averageRequired: false},
+    wordle: {
+        regex: /Wordle\s(?:\d{1,3}(?:\d{3})*)\s(\d)\/\d+/g,
+        ascending: true,
+        averageRequired: true,
+        gameLink: "https://www.nytimes.com/games/wordle/index.html"
+    },
+    timeGuesser: {
+        regex: /TimeGuessr\s+#\d+\s+(\d+)\/[\d,]+/g,
+        ascending: false,
+        averageRequired: false,
+        gameLink: "https://timeguessr.com/roundonedaily"
+    },
     tradle: {}
 }
 
@@ -77,6 +86,7 @@ function initSite() {
     document.getElementById("savePlayerBtn").addEventListener("click", savePlayer);
     document.getElementById("clearScoreBtn").addEventListener("click", clearUserScore);
     document.getElementById("sendBtn").addEventListener("click", sendMessage);
+    document.getElementById("orderByBtn").addEventListener("click", changeLeaderboardOrder);
 
     // Add event listener for pressing enter in score text area
     const scoreTextArea = document.getElementById("scoreInput");
@@ -109,6 +119,24 @@ function initSite() {
     });
 
     updateAllFields();
+    addUpdateListener();
+}
+
+// Add listener to allow auto-updates when new messages are sent
+async function addUpdateListener() {
+    try {
+        // Ensure dates file is created (as a file not just a collection)
+        await setDoc(doc(db, "games", currentGame, "dates", getTodaysDate()), { created: new Date() }, { merge: true });
+        
+        const messagesRef = collection(db, "games", currentGame, "dates", getTodaysDate(), "messages");
+
+        // When a new doc is added, update the message area
+        onSnapshot(messagesRef, (snapshot) => {  
+            loadMessages();
+        });
+    } catch (error) {
+        console.error("Error adding update listener:", error);
+    }
 }
 
 // Load user info and scores based on who is logged in and update leaderboards
@@ -123,7 +151,10 @@ async function updateAllFields() {
     await updateUserScore();
     await updateLeaderboard();
     await updateLeaderboardAllTime();
-    document.getElementById("labelCurrentGame").textContent = currentGame.charAt(0).toUpperCase() + currentGame.slice(1);
+
+    // Update current game label with link to that game
+    const gameName =  currentGame.charAt(0).toUpperCase() + currentGame.slice(1);
+    document.getElementById("labelCurrentGame").innerHTML = `<a href=${gameDetails[currentGame]["gameLink"]} target="_blank">${gameName}</a>`;
 }
 
 // Populate the user drop-down based on the userList
@@ -171,6 +202,11 @@ function login() {
 // Save score to Firestore
 async function saveScore(username, gamename, date, score) {
     try {
+        // Ensure the date and user document exists
+        await setDoc(doc(db, "games", gamename, "dates", date), { created: new Date() }, { merge: true });
+        await setDoc(doc(db, "games", gamename, "users", username), { created: new Date() }, { merge: true });
+
+        // Write to both places
         await setDoc(doc(db, "games", gamename, "dates", date, "users", username), { score });
         await setDoc(doc(db, "games", gamename, "users", username, "dates", date), { score });
 
@@ -180,16 +216,30 @@ async function saveScore(username, gamename, date, score) {
     }
 }
 
-// Load all scores and dates from Firestore for a user for a particular game
-async function getScoresByGame(username, gamename) {
+// Load all scores and dates from Firestore for all users for a particular game
+async function getScoresByGame(gamename) {
     try {
-        const scoresCollectionRef = collection(db, "games", gamename, "users", username, "dates");
-        const querySnapshot = await getDocs(scoresCollectionRef);
         const scores = [];
+        const usersCollectionRef = collection(db, "games", gamename, "users");
+        const userQuerySnapshot = await getDocs(usersCollectionRef);
 
-        querySnapshot.forEach((doc) => {
-            scores.push({date: doc.id, score: doc.data().score});
-        });
+        if (userQuerySnapshot.empty) {
+            console.log("No user documents found in users subcollection.");
+        }        
+
+        for (const userDoc of userQuerySnapshot.docs) {
+            const username = userDoc.id;
+            const datesCollectionRef = collection(db, "games", gamename, "users", username, "dates");
+            const dateQuerySnapshot = await getDocs(datesCollectionRef);
+
+            dateQuerySnapshot.forEach((dateDoc) => {
+                scores.push({
+                    user: username,
+                    date: dateDoc.id,
+                    score: dateDoc.data().score
+                });
+            });
+        }
 
         if (scores.length > 0) {
             return scores;
@@ -247,12 +297,13 @@ async function getScoresByDate(gamename, date) {
 
 // Determine score based on text entered by user and save to Firestore
 async function addScore() {
-    const score = parseScore(document.getElementById("scoreInput").value);
+    const scoreTextArea = document.getElementById("scoreInput");
+    const score = parseScore(scoreTextArea.value);
 
-    // Save score if valid text was entered
+    // Save score and clear text if valid text was entered
     if (score) {
         await saveScore(userName, currentGame, getTodaysDate(), score);
-        
+        scoreTextArea.value = "";
     } else {
         alert("Invalid score entered - please use the \"Share\" button on Wordle to copy the results.");
     }
@@ -281,7 +332,6 @@ async function clearUserScore() {
 function parseScore(score) {
     const formattedScore = score.replace(/,/g, "");
     const regex = gameDetails[currentGame]["regex"];
-    console.log(formattedScore);
 
     const matches = [...formattedScore.matchAll(regex)];
 
@@ -340,39 +390,62 @@ async function updateLeaderboard() {
 
 // Update the all-time leaderboard 
 async function updateLeaderboardAllTime() {
-    const lbAllTime = document.getElementById("leaderboardAllTime");
-    const allUserScores = {};
+    // Clear scores stored
+    allUserScoresByAvg = {};
+    allUserScoresByTotal = {};
 
     // Get all scores for each user
-    for (const user of userList) {
-        const uScoreList = [];
-        const allScores = await getScoresByGame(user, currentGame);
-        // Check non-null value returned
-        if (allScores) {
-            // Loop through the user's scores and add them to our temporary list
-            for (const i in allScores) {
-                uScoreList.push(allScores[i]["score"]);
+    const allScores = await getScoresByGame(currentGame);
+
+    // Check non-null value returned
+    if (allScores) {
+        // Get totals for each user
+        const userTotals = {};
+        const userTotalsReady = {};
+
+        allScores.forEach(({ user, score }) => {
+            if (!userTotals[user]) {
+                userTotals[user] = { total: 0, count: 0 };
+                userTotalsReady[user] = 0;
             }
-            // Get the sum of the player's scores
-            let sumOfScores = uScoreList.reduce((a, b) => Number(a) + Number(b), 0);
-            
-            // Get average if the game requires
-            if (gameDetails[currentGame]["averageRequired"]) {
-                allUserScores[user] = sumOfScores / allScores.length;
-            } else {
-                allUserScores[user] = sumOfScores;
-            }
-        }
-    }
+            userTotals[user].total += Number(score);
+            userTotals[user].count += 1;
+
+            userTotalsReady[user] += Number(score);
+        });
     
+        allUserScoresByTotal = userTotalsReady;
+
+        // Calculate averages
+        const averages = Object.entries(userTotals).reduce((acc, [user, stats]) => {
+            acc[user] = (stats.total / stats.count).toFixed(1);
+            return acc;
+        }, {});
+        
+        allUserScoresByAvg = averages;
+    }
+
+    orderLeaderboardBy();
+}
+
+// Call when changing how all-time leaderbord is sorted
+function orderLeaderboardBy() {
+    const lb = document.getElementById("leaderboardAllTime");
+    let scores;
+
+    if (orderedByAverage) {
+        scores = allUserScoresByAvg;
+    } else {
+        scores = allUserScoresByTotal;
+    }
+
     // Convert the object to an array sorted by score
-    const sortedEntries = Object.entries(allUserScores).sort((a, b) => {
+    const sortedEntries = Object.entries(scores).sort((a, b) => {
         if (gameDetails[currentGame]["ascending"]) {
             return Number(a[1]) - Number(b[1]);
         } else {
             return Number(b[1]) - Number(a[1]);
         }
-        
     });
     
     // Loop through results and add to a string for display purposes
@@ -380,10 +453,24 @@ async function updateLeaderboardAllTime() {
     for (const [name, score] of sortedEntries) {
         displayText += `${name}: ${score}\n`;
     }
+
     // Update leaderboard text and reset height and scroll height
-    lbAllTime.value = displayText.trim();
-    lbAllTime.style.height = "auto";
-    lbAllTime.style.height = (lbAllTime.scrollHeight) + "px";
+    lb.value = displayText.trim();
+    lb.style.height = "auto";
+    lb.style.height = (lb.scrollHeight) + "px";
+
+    // Update the text of the order button
+    if (orderedByAverage) {
+        document.getElementById("orderByBtn").textContent = "Ordered by average";
+    } else {
+        document.getElementById("orderByBtn").textContent = "Ordered by total";
+    }
+}
+
+// Called when order button clicked
+function changeLeaderboardOrder() {
+    orderedByAverage = !orderedByAverage;
+    orderLeaderboardBy();
 }
 
 // Get current user's score for today and store for use

@@ -6,8 +6,9 @@ body {
 }
 
 textarea {
-    width: 100%;
-    height: 80px;
+    width: 400px;
+    height: 40px;
+    resize: none;
 }
 
 button {
@@ -36,27 +37,60 @@ ul {
     overflow: hidden;
 }
 
+/* Sidebar container */
 #loginDiv {
-    background-color: #e7e7e7dd;
     border-radius: 5px;
-    position: absolute;
     top: 10px;
     right: 10px;
-    padding: 10px 15px;
+    padding: 10px;
+    color: #000; /* Black text */
+    padding: 20px;
+    width: 220px;
+    border-right: 1px solid #ddd;
+    font-family: Arial, sans-serif;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    position: absolute;
+  }
+  
+  /* General labels */
+  #loginDiv label {
+    font-weight: bold;
     font-size: 16px;
-}
-
-#loginBtn {
-    background-color: #6e6d6d;
-    color: white;
+  }
+  
+  /* Paragraph styling */
+  #loginDiv p {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  
+  /* Buttons */
+  .sideBtn {
+    background-color: #000; /* Black background */
+    color: #fff; /* White text */
     border: none;
-    border-radius: 5px;
+    padding: 8px 14px;
+    margin-top: 10px;
+    font-size: 14px;
     cursor: pointer;
-}
-
-#loginBtn:hover {
-    background-color: #4b4b4b;
-}
+    border-radius: 5px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .sideBtn:hover {
+    background-color: #333; /* Darker black on hover */
+  }
+  
+  /* Optional: add spacing between elements */
+  #loginBtn {
+    margin-top: 10px;
+  }
+  
+  #clearScoreBtn {
+    margin-top: 8px;
+  }
+  
 
 #gameMenu {
     display: flex;
@@ -123,3 +157,50 @@ ul {
     font-size: 1em;
   }
   
+  .tooltip-icon {
+    display: inline-block;
+    background-color: #ccc;
+    color: #000;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 12px;
+    text-align: center;
+    line-height: 16px;
+    cursor: pointer;
+    margin-left: 5px;
+    position: relative;
+    font-weight: bold;
+  }
+  
+  .tooltip-text {
+    visibility: hidden;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 6px;
+    border-radius: 6px;
+    position: absolute;
+    bottom: 125%; /* position above the icon */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 1;
+  }
+  
+  .tooltip-icon:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .orderByBtnClass {
+      position: relative;
+      display: inline-block;
+  }
+
+  .orderByBtnClass:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
